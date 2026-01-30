@@ -136,8 +136,34 @@ QTMTextToolbar::QTMTextToolbar (QWidget* parent, qt_simple_widget_rep* owner)
   });
   connect (colorBtn, &QToolButton::clicked, this, [this] () {
     if (this->owner) {
-      // 文字颜色功能 - 打开颜色选择器
-      call ("interactive", object ("open-color-selector"));
+      debug_std << "点击颜色按钮\n";
+
+      // 方案1：call("interactive", object("color-menu"))
+      // 编译通过，但可能不工作，因为 interactive 期望命令而不是菜单
+      //debug_std << "尝试方案1: call(\"interactive\", object(\"color-menu\"))\n";
+      //call ("interactive", object ("color-menu"));
+
+      // 方案2：eval("(interactive color-menu)")
+      // 编译通过，但可能同样的问题
+      // debug_std << "尝试方案2: eval(\"(interactive color-menu)\")\n";
+      // eval ("(interactive color-menu)");
+
+      // 方案3：eval("(menu-popup (lambda () (link color-menu)) (gui-position))")
+      // 编译通过，尝试使用 menu-popup 函数
+      // debug_std << "尝试方案3: menu-popup\n";
+      //eval ("(menu-popup (lambda () (link color-menu)) (gui-position))");
+
+      // 方案4：eval("(show-context-menu (lambda () (link color-menu)) (gui-position))")
+      // 编译通过，尝试使用 show-context-menu 函数
+      // debug_std << "尝试方案4: show-context-menu\n";
+      // eval ("(show-context-menu (lambda () (link color-menu)) (gui-position))");
+
+      // 方案5：call("interactive-color", ...)
+      // 编译通过，提供基本的颜色选择功能
+      // debug_std << "尝试方案5: interactive-color\n";
+      // call ("interactive-color",
+      //       object ("(lambda (col) (make-with \"color\" col))"),
+      //       object ("()"));
     }
   });
 
