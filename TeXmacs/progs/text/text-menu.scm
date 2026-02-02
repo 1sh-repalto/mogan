@@ -471,13 +471,7 @@
    (begin
      (make-aux "table-of-contents" "toc-prefix" "toc")
      (update-document "all")))
-  (assuming (get-boolean-preference "gui:new bibliography dialogue")
-    ("Bibliography" (open-bibliography-inserter)))
-  (assuming (not (get-boolean-preference "gui:new bibliography dialogue"))
-    (if (with-database-tool?)
-        ("Bibliography" (make-database-bib)))
-    (if (not (with-database-tool?))
-        ("Bibliography" (choose-file make-bib "Bibliography file" "tmbib"))))
+  ("Bibliography" (open-bibliography-inserter))
   ("Index" 
     (begin 
       (make-aux "the-index" "index-prefix" "idx")

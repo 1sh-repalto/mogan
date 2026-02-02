@@ -542,22 +542,6 @@
              (n (if (== (url-suffix r) "bib") (url-unglue r 4) r)))
         (url->string n))))
 
-(tm-define (make-bib file-name)
-  (:argument file-name "Bibliography file")
-  (let* ((name (normalized-bib-name file-name))
-         (aux (if (context-has? "bib-prefix") (get-env "bib-prefix") "bib"))
-         (style (if (context-has? "bib-style") (get-env "bib-style") "tm-gbt7714-2015")))
-    (if (not (make-return-after))
-        (insert-go-to `(bibliography ,aux ,style ,name (document ""))
-                      '(3 0 0)))))
-
-(tm-define (make-database-bib)
-  (with aux (if (context-has? "bib-prefix") (get-env "bib-prefix") "bib")
-    (with style (if (context-has? "bib-style") (get-env "bib-style") "tm-gbt7714-2015")
-      (if (not (make-return-after))
-          (insert-go-to `(bibliography ,aux ,style "" (document ""))
-                        '(3 0 0))))))
-
 (tm-define (automatic-section-context? t)
   (tree-in? t (automatic-section-tag-list)))
 
