@@ -560,6 +560,7 @@ edit_env_rep::exec (tree t) {
     return exec_frame_inverse (t);
 
   default:
+    if (L (t) == UNINIT) return t;
     if (L (t) < START_EXTENSIONS) {
       int i, n= N (t);
       // cout << "Executing " << t << "\n";
@@ -852,7 +853,11 @@ edit_env_rep::exec_value (tree t) {
   if (N (t) < 1) return tree (ERROR, "bad value");
   tree r= exec (t[0]);
   if (is_compound (r)) return tree (ERROR, "bad value");
-  return exec (read (r->label));
+  string name= r->label;
+  if (!provides (name)) return tree (UNINIT);
+  tree value= read (name);
+  if (L (value) == UNINIT) return tree (UNINIT);
+  return exec (value);
 }
 
 tree
