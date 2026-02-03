@@ -660,7 +660,7 @@ edit_env_rep::exec_with (tree t) {
     write_update (vars[i], newv[i]);
   tree r= exec (t[n - 1]);
   for (i= k - 1; i >= 0; i--)
-    write_update (vars[i], oldv[i]);
+    if (L (oldv[i]) != UNINIT) write_update (vars[i], oldv[i]);
 
   tree u (WITH, n);
   for (i= 0; i < k; i++) {
@@ -854,9 +854,9 @@ edit_env_rep::exec_value (tree t) {
   tree r= exec (t[0]);
   if (is_compound (r)) return tree (ERROR, "bad value");
   string name= r->label;
-  if (!provides (name)) return tree (UNINIT);
+  if (!provides (name)) return "";
   tree value= read (name);
-  if (L (value) == UNINIT) return tree (UNINIT);
+  if (L (value) == UNINIT) return "";
   return exec (value);
 }
 
@@ -2672,7 +2672,7 @@ edit_env_rep::exec_until_with (tree t, path p, string var, int level) {
     return true;
   }
   for (i= k - 1; i >= 0; i--)
-    write_update (vars[i], oldv[i]);
+    if (L (oldv[i]) != UNINIT) write_update (vars[i], oldv[i]);
   STACK_DELETE_ARRAY (vars);
   STACK_DELETE_ARRAY (oldv);
   STACK_DELETE_ARRAY (newv);
