@@ -18,7 +18,6 @@
 #include <QHBoxLayout>
 #include <QMouseEvent>
 #include <QPaintEvent>
-#include <QToolButton>
 #include <QWidget>
 
 class QTMTextToolbar : public QWidget {
@@ -38,17 +37,7 @@ protected:
   double                     cached_magf; // 缩放因子
   bool                       painted;
   int                        painted_count;
-
-  // 工具栏按钮
-  QToolButton* boldBtn;
-  QToolButton* italicBtn;
-  QToolButton* underlineBtn;
-  QToolButton* highlightBtn;
-  QToolButton* colorBtn;
-  QToolButton* alignLeftBtn;
-  QToolButton* alignCenterBtn;
-  QToolButton* alignRightBtn;
-  QString      btn_style;
+  qt_widget                  text_toolbar_widget;
 
 public:
   QTMTextToolbar (QWidget* parent, qt_simple_widget_rep* owner);
@@ -64,6 +53,8 @@ protected:
   void cachePosition (rectangle selr, double magf, int scroll_x, int scroll_y,
                       int canvas_x, int canvas_y);
   void getCachedPosition (qt_renderer_rep* ren, int& x, int& y);
+  void rebuildButtonsFromScheme ();
+  void clearButtons ();
   bool eventFilter (QObject* obj, QEvent* event) override;
 };
 

@@ -9,9 +9,10 @@
  ******************************************************************************/
 
 #include "QTMTextToolbar.hpp"
+#include "QTMStyle.hpp"
 #include "bitmap_font.hpp"
 #include "moebius/data/scheme.hpp"
-#include "qbuttongroup.h"
+#include "object_l5.hpp"
 #include "qt_renderer.hpp"
 #include "qt_utilities.hpp"
 #include "scheme.hpp"
@@ -19,12 +20,17 @@
 #include "tm_ostream.hpp"
 
 #include <QGuiApplication>
+#include <QFrame>
 #include <QHelpEvent>
 #include <QIcon>
+#include <QLayoutItem>
 #include <QPainter>
 #include <QPen>
 #include <QScreen>
+#include <QSizePolicy>
+#include <QToolButton>
 #include <QToolTip>
+#include <QWidgetAction>
 #include <cmath>
 
 // 悬浮工具栏创建函数
@@ -53,148 +59,76 @@ QTMTextToolbar::QTMTextToolbar (QWidget* parent, qt_simple_widget_rep* owner)
   effect->setColor (QColor (0, 0, 0, 120));
   this->setGraphicsEffect (effect);
 
-  // 创建按钮
-  boldBtn= new QToolButton ();
-  boldBtn->setObjectName ("text-toolbar-button");
-  boldBtn->setProperty ("icon-name", "bold");
-  boldBtn->setCheckable (true);
-  boldBtn->setToolTip (qt_translate ("Bold"));
-
-  italicBtn= new QToolButton ();
-  italicBtn->setObjectName ("text-toolbar-button");
-  italicBtn->setProperty ("icon-name", "italic");
-  italicBtn->setCheckable (true);
-  italicBtn->setToolTip (qt_translate ("Italic"));
-
-  underlineBtn= new QToolButton ();
-  underlineBtn->setObjectName ("text-toolbar-button");
-  underlineBtn->setProperty ("icon-name", "underline");
-  underlineBtn->setCheckable (true);
-  underlineBtn->setToolTip (qt_translate ("Underline"));
-
-  highlightBtn= new QToolButton ();
-  highlightBtn->setObjectName ("text-toolbar-button");
-  highlightBtn->setProperty ("icon-name", "highlight");
-  highlightBtn->setCheckable (true);
-  highlightBtn->setToolTip (qt_translate ("Highlight"));
-
-  colorBtn= new QToolButton ();
-  colorBtn->setObjectName ("text-toolbar-button");
-  colorBtn->setProperty ("icon-name", "color");
-  colorBtn->setCheckable (false);
-  colorBtn->setToolTip (qt_translate ("Text color"));
-
-  alignLeftBtn= new QToolButton ();
-  alignLeftBtn->setObjectName ("text-toolbar-button");
-  alignLeftBtn->setProperty ("icon-name", "left-align");
-  alignLeftBtn->setCheckable (true);
-  alignLeftBtn->setToolTip (qt_translate ("Align left"));
-
-  alignCenterBtn= new QToolButton ();
-  alignCenterBtn->setObjectName ("text-toolbar-button");
-  alignCenterBtn->setProperty ("icon-name", "middle-align");
-  alignCenterBtn->setCheckable (true);
-  alignCenterBtn->setToolTip (qt_translate ("Align center"));
-
-  alignRightBtn= new QToolButton ();
-  alignRightBtn->setObjectName ("text-toolbar-button");
-  alignRightBtn->setProperty ("icon-name", "right-align");
-  alignRightBtn->setCheckable (true);
-  alignRightBtn->setToolTip (qt_translate ("Align right"));
-
-  // 添加按钮到布局
-  layout->addWidget (boldBtn);
-  layout->addWidget (italicBtn);
-  layout->addWidget (underlineBtn);
-  layout->addWidget (highlightBtn);
-  layout->addWidget (colorBtn);
-  layout->addWidget (alignLeftBtn);
-  layout->addWidget (alignCenterBtn);
-  layout->addWidget (alignRightBtn);
-
-  // 连接按钮点击事件
-  connect (boldBtn, &QToolButton::clicked, this, [this] () {
-    if (this->owner) {
-      call ("toggle-bold");
-    }
-  });
-  connect (italicBtn, &QToolButton::clicked, this, [this] () {
-    if (this->owner) {
-      call ("toggle-italic");
-    }
-  });
-  connect (underlineBtn, &QToolButton::clicked, this, [this] () {
-    if (this->owner) {
-      call ("toggle-underlined");
-    }
-  });
-  connect (highlightBtn, &QToolButton::clicked, this, [this] () {
-    if (this->owner) {
-      // 高亮功能
-      call ("mark-text");
-    }
-  });
-  connect (colorBtn, &QToolButton::clicked, this, [this] () {
-    if (this->owner) {
-      debug_std << "点击颜色按钮\n";
-
-      // 方案1：call("interactive", object("color-menu"))
-      // 编译通过，但可能不工作，因为 interactive 期望命令而不是菜单
-      //debug_std << "尝试方案1: call(\"interactive\", object(\"color-menu\"))\n";
-      //call ("interactive", object ("color-menu"));
-
-      // 方案2：eval("(interactive color-menu)")
-      // 编译通过，但可能同样的问题
-      // debug_std << "尝试方案2: eval(\"(interactive color-menu)\")\n";
-      // eval ("(interactive color-menu)");
-
-      // 方案3：eval("(menu-popup (lambda () (link color-menu)) (gui-position))")
-      // 编译通过，尝试使用 menu-popup 函数
-      // debug_std << "尝试方案3: menu-popup\n";
-      //eval ("(menu-popup (lambda () (link color-menu)) (gui-position))");
-
-      // 方案4：eval("(show-context-menu (lambda () (link color-menu)) (gui-position))")
-      // 编译通过，尝试使用 show-context-menu 函数
-      // debug_std << "尝试方案4: show-context-menu\n";
-      // eval ("(show-context-menu (lambda () (link color-menu)) (gui-position))");
-
-      // 方案5：call("interactive-color", ...)
-      // 编译通过，提供基本的颜色选择功能
-      // debug_std << "尝试方案5: interactive-color\n";
-      // call ("interactive-color",
-      //       object ("(lambda (col) (make-with \"color\" col))"),
-      //       object ("()"));
-    }
-  });
-
-  // 对齐按钮分组
-  QButtonGroup* alignGroup= new QButtonGroup (this);
-  alignGroup->addButton (alignLeftBtn);
-  alignGroup->addButton (alignCenterBtn);
-  alignGroup->addButton (alignRightBtn);
-  alignGroup->setExclusive (true);
-
-  connect (alignGroup,
-           QOverload<QAbstractButton*>::of (&QButtonGroup::buttonClicked), this,
-           [=] (QAbstractButton* button) {
-             if (this->owner) {
-               if (button == alignLeftBtn) {
-                 call ("make-line-with", object ("par-mode"), object ("left"));
-               }
-               else if (button == alignCenterBtn) {
-                 call ("make-line-with", object ("par-mode"),
-                       object ("center"));
-               }
-               else if (button == alignRightBtn) {
-                 call ("make-line-with", object ("par-mode"), object ("right"));
-               }
-             }
-           });
-
-  autoSize ();
+  rebuildButtonsFromScheme ();
 }
 
 QTMTextToolbar::~QTMTextToolbar () {}
+
+void
+QTMTextToolbar::clearButtons () {
+  if (!layout) return;
+  QLayoutItem* item= nullptr;
+  while ((item= layout->takeAt (0)) != nullptr) {
+    if (QWidget* w= item->widget ()) {
+      w->setParent (nullptr);
+      delete w;
+    }
+    else if (QLayout* l= item->layout ()) {
+      delete l;
+    }
+    delete item;
+  }
+}
+
+void
+QTMTextToolbar::rebuildButtonsFromScheme () {
+  eval ("(use-modules (generic text-toolbar))");
+  object menu= eval ("'(horizontal (link text-toolbar-icons))");
+  object obj = call ("make-menu-widget", menu, 0);
+  if (!is_widget (obj)) return;
+
+  text_toolbar_widget= concrete (as_widget (obj));
+  QList<QAction*>* list= text_toolbar_widget->get_qactionlist ();
+  if (!list) return;
+
+  clearButtons ();
+
+  for (int i= 0; i < list->count (); ++i) {
+    QAction* action= list->at (i);
+    if (!action) continue;
+
+    if (action->isSeparator ()) {
+      QFrame* sep= new QFrame (this);
+      sep->setFrameShape (QFrame::VLine);
+      sep->setFrameShadow (QFrame::Plain);
+      sep->setFixedWidth (1);
+      sep->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Expanding);
+      layout->addWidget (sep);
+      continue;
+    }
+
+    if (action->text ().isNull () && action->icon ().isNull ()) {
+      layout->addSpacing (8);
+      continue;
+    }
+
+    if (QWidgetAction* wa= qobject_cast<QWidgetAction*> (action)) {
+      QWidget* w= wa->requestWidget (this);
+      if (w) layout->addWidget (w);
+      continue;
+    }
+
+    QToolButton* button= new QToolButton (this);
+    button->setObjectName ("text-toolbar-button");
+    button->setAutoRaise (true);
+    button->setDefaultAction (action);
+    button->setPopupMode (QToolButton::InstantPopup);
+    if (tm_style_sheet == "") button->setStyle (qtmstyle ());
+    layout->addWidget (button);
+  }
+
+  autoSize ();
+}
 
 void
 QTMTextToolbar::showTextToolbar (qt_renderer_rep* ren, rectangle selr,
@@ -295,26 +229,17 @@ QTMTextToolbar::autoSize () {
 
   // 设置按钮大小
   QSize icon_size (btn_size, btn_size);
-  boldBtn->setIconSize (icon_size);
-  italicBtn->setIconSize (icon_size);
-  underlineBtn->setIconSize (icon_size);
-  highlightBtn->setIconSize (icon_size);
-  colorBtn->setIconSize (icon_size);
-  alignLeftBtn->setIconSize (icon_size);
-  alignCenterBtn->setIconSize (icon_size);
-  alignRightBtn->setIconSize (icon_size);
-
-  // 设置按钮固定大小
   QSize fixed_size (btn_size + 32,
                     btn_size + 32); // 内边距也扩大4倍 (8 * 4.0 = 32)
-  boldBtn->setFixedSize (fixed_size);
-  italicBtn->setFixedSize (fixed_size);
-  underlineBtn->setFixedSize (fixed_size);
-  highlightBtn->setFixedSize (fixed_size);
-  colorBtn->setFixedSize (fixed_size);
-  alignLeftBtn->setFixedSize (fixed_size);
-  alignCenterBtn->setFixedSize (fixed_size);
-  alignRightBtn->setFixedSize (fixed_size);
+  const QList<QToolButton*> buttons=
+      findChildren<QToolButton*> (QString (), Qt::FindChildrenRecursively);
+  for (QToolButton* button : buttons) {
+    if (!button) continue;
+    if (button->objectName ().isEmpty ())
+      button->setObjectName ("text-toolbar-button");
+    button->setIconSize (icon_size);
+    button->setFixedSize (fixed_size);
+  }
 
   // 调整窗口大小
   adjustSize ();
