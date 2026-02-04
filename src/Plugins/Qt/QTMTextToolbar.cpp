@@ -180,17 +180,16 @@ QTMTextToolbar::cachePosition (rectangle selr, double magf, int scroll_x,
 
 void
 QTMTextToolbar::getCachedPosition (qt_renderer_rep* ren, int& x, int& y) {
-  rectangle selr    = cached_rect;
-  double    inv_unit= 1.0 / 256.0;
-  double cx_logic        = (selr->x1 + selr->x2) * 0.5;
-  double sel_top_logic   = (selr->y1 > selr->y2) ? selr->y1 : selr->y2;
-  double sel_bottom_logic= (selr->y1 > selr->y2) ? selr->y2 : selr->y1;
+  rectangle selr            = cached_rect;
+  double    inv_unit        = 1.0 / 256.0;
+  double    cx_logic        = (selr->x1 + selr->x2) * 0.5;
+  double    sel_top_logic   = (selr->y1 > selr->y2) ? selr->y1 : selr->y2;
+  double    sel_bottom_logic= (selr->y1 > selr->y2) ? selr->y2 : selr->y1;
 
   // 使用公式计算QT坐标
   double cx_px=
       ((cx_logic - cached_scroll_x) * cached_magf + cached_canvas_x) * inv_unit;
-  double top_px=
-      -(sel_top_logic - cached_scroll_y) * cached_magf * inv_unit;
+  double top_px= -(sel_top_logic - cached_scroll_y) * cached_magf * inv_unit;
   double bottom_px=
       -(sel_bottom_logic - cached_scroll_y) * cached_magf * inv_unit;
 
@@ -206,8 +205,7 @@ QTMTextToolbar::getCachedPosition (qt_renderer_rep* ren, int& x, int& y) {
   bottom_px+= blank_top;
 
   const int above_y=
-      int (std::round (top_px -
-                       cached_height-10)); // 在选区顶部上方显示
+      int (std::round (top_px - cached_height - 10)); // 在选区顶部上方显示
   const int below_y=
       int (std::round (bottom_px + 10)); // 如果上面空间不够，显示在选区下方
 
@@ -219,9 +217,15 @@ QTMTextToolbar::getCachedPosition (qt_renderer_rep* ren, int& x, int& y) {
     int vp_w= owner->scrollarea ()->viewport ()->width ();
     int vp_h= owner->scrollarea ()->viewport ()->height ();
 
-    const bool above_fits=
-        (above_y >= 0) && (above_y + cached_height <= vp_h);
-    if (!above_fits) y= below_y;
+    const bool above_fits= (above_y >= 0) && (above_y + cached_height <= vp_h);
+    const bool below_fits= (below_y >= 0) && (below_y + cached_height <= vp_h);
+
+    if (above_fits) y= above_y;
+    else if (below_fits) y= below_y;
+    else {
+      x= std::max (0, (vp_w - cached_width) / 2);
+      y= std::max (0, (vp_h - cached_height) / 2);
+    }
 
     if (x < 0) x= 0;
     if (x + cached_width > vp_w) x= vp_w - cached_width;
@@ -245,10 +249,8 @@ QTMTextToolbar::selectionInView () const {
       ((selr->x1 - cached_scroll_x) * cached_magf + cached_canvas_x) * inv_unit;
   double x2_px=
       ((selr->x2 - cached_scroll_x) * cached_magf + cached_canvas_x) * inv_unit;
-  double y1_px=
-      -(selr->y1 - cached_scroll_y) * cached_magf * inv_unit;
-  double y2_px=
-      -(selr->y2 - cached_scroll_y) * cached_magf * inv_unit;
+  double y1_px= -(selr->y1 - cached_scroll_y) * cached_magf * inv_unit;
+  double y2_px= -(selr->y2 - cached_scroll_y) * cached_magf * inv_unit;
 
   double blank_top= 0.0;
   if (owner->scrollarea ()->surface ()) {

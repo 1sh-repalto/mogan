@@ -14,12 +14,12 @@
 #include "array.hpp"
 #include "boot.hpp"
 #include "converter.hpp"
+#include "edit_interface.hpp"
 #include "object_l5.hpp"
 #include "preferences.hpp"
 #include "qt_gui.hpp"
 #include "qt_simple_widget.hpp"
 #include "qt_utilities.hpp"
-#include "edit_interface.hpp"
 #include "scheme.hpp"
 #include "sys_utils.hpp"
 #ifdef USE_MUPDF_RENDERER
