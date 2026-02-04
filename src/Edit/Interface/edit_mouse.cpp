@@ -1030,6 +1030,7 @@ edit_interface_rep::handle_mouse (string kind, SI x, SI y, int m, time_t t,
 
 bool
 edit_interface_rep::should_show_text_toolbar () {
+  if (as_bool (call ("in-math?"))) return false;
   // 检查是否有活动的文本选区
   if (!selection_active_any ()) return false;
 
