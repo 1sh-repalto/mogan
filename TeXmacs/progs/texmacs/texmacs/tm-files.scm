@@ -177,7 +177,8 @@
       u)))
 
 (tm-define (buffer->windows-of-tabpage buf)
-  (remove (lambda (vw) (url-none? vw)) (map view->window-of-tabpage (buffer->views buf))))
+  (remove (lambda (vw) (or (not vw) (url-none? vw)))
+          (map view->window-of-tabpage (buffer->views buf))))
 
 (tm-define (switch-to-buffer* buf)
   (let* ((wins (buffer->windows-of-tabpage buf))

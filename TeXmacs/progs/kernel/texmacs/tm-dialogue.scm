@@ -13,7 +13,10 @@
 
 (texmacs-module (kernel texmacs tm-dialogue)
   (:use (kernel texmacs tm-define)))
-
+(import (liii json)
+        (liii time)
+        (liii list)
+        (liii path))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Questions with user interaction
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -158,6 +161,98 @@
 
 (define interactive-arg-table (make-ahash-table))
 
+
+(define interactive-arg-recent-file-json
+  '((meta . ((total . 0)))
+    (files . #())))
+
+
+(define-public (recent-files-remove-by-path path)
+  (let ((idx (recent-files-index-by-path interactive-arg-recent-file-json path)))
+    (when idx
+      (set! interactive-arg-recent-file-json
+            (json-drop interactive-arg-recent-file-json 'files idx)))))
+
+
+
+(define (recent-files-apply-lru recent-files limit)
+  (let* ((files (json-ref recent-files 'files))
+         (n (vector-length files))
+         (indexed
+          (let loop ((i 0) (acc '()))
+            (if (>= i n) acc
+                (let* ((item (vector-ref files i))
+                       (t (json-ref item 'last_open))
+                       (t (if (number? t) t 0)))
+                  (loop (+ i 1) (cons (cons i t) acc))))))
+         (sorted (sort indexed (lambda (a b) (> (cdr a) (cdr b))))))
+    (if (<= n limit)
+        (json-set recent-files 'files
+                  (list->vector
+                   (map (lambda (p) (vector-ref files (car p))) sorted)))
+        (let* ((keep (take sorted limit))
+               (drop (drop sorted limit))
+               (new-files
+                (list->vector
+                 (append
+                  (map (lambda (p)
+                         (let* ((item (vector-ref files (car p))))
+                           (json-set item 'show #t)))
+                       keep)
+                  (map (lambda (p)
+                         (let* ((item (vector-ref files (car p))))
+                           (json-set item 'show #f)))
+                       drop)))))
+          (json-set recent-files 'files new-files)))))
+
+(define (recent-files-add recent-files path name)
+  (let* ((files (json-ref recent-files 'files))
+         (idx (vector-length files))
+         (item `((path . ,path)
+                 (name . ,name)
+                 (last_open . ,(current-second))
+                 (open_count . 1)
+                 (show . #t)))
+         (total (json-ref recent-files 'meta 'total))
+         (total (if (number? total) total 0))
+         (r1 (json-set
+               (json-push recent-files 'files idx item)
+               'meta 'total (+ total 1))))
+    (recent-files-apply-lru r1 25)))
+
+(define (recent-files-set recent-files idx)
+  (let* ((item (json-ref recent-files 'files idx))
+         (path* (json-ref item 'path))
+         (name* (json-ref item 'name))
+         (count* (json-ref item 'open_count))
+         (count* (if (number? count*) count* 0))
+         (new-item `((path . ,path*)
+                     (name . ,name*)
+                     (last_open . ,(current-second))
+                     (open_count . ,(+ count* 1))
+                     (show . #t)))
+         (r1 (json-set recent-files 'files idx new-item)))
+    (recent-files-apply-lru r1 25)))
+
+
+
+(define (recent-files-index-by-path recent-files path)
+  (let ((files (json-ref recent-files 'files)))
+    (let loop ((i 0))
+      (if (>= i (vector-length files))
+          #f
+          (let ((item (vector-ref files i)))
+            (if (equal? (json-ref item 'path) path)
+                i
+                (loop (+ i 1))))))))
+
+(define (recent-files-paths recent-files)
+  (let ((files (json-ref recent-files 'files)))
+    (map (lambda (item)
+           (list (cons "0" (json-ref item 'path))))
+         (vector->list files))))
+
+
 (define (list-but l1 l2)
   (cond ((null? l1) l1)
         ((in? (car l1) l2) (list-but (cdr l1) l2))
@@ -179,6 +274,16 @@
   (and-with name (procedure-symbol-name fun)
     (symbol->string name)))
 
+(define (recent-buffer-json file-path)
+  (let* ((name (url->system (url-tail (system->url file-path))))
+         (idx (recent-files-index-by-path interactive-arg-recent-file-json file-path)))
+    (if idx
+        (set! interactive-arg-recent-file-json
+              (recent-files-set interactive-arg-recent-file-json idx))
+        (set! interactive-arg-recent-file-json
+              (recent-files-add interactive-arg-recent-file-json file-path name)))))
+
+
 (define-public (learn-interactive fun assoc-t)
   "Learn interactive values for @fun"
   (set! assoc-t (map (lambda (x) (cons (car x) (as-stree (cdr x)))) assoc-t))
@@ -186,18 +291,38 @@
   (when (symbol? fun)
     (let* ((l1 (or (ahash-ref interactive-arg-table fun) '()))
            (l2 (cons assoc-t (list-but l1 (list assoc-t)))))
-      (ahash-set! interactive-arg-table fun l2))))
+      (case fun
+        ((recent-buffer)
+          (recent-buffer-json (cdr (car (car l2)))))
+        (else (ahash-set! interactive-arg-table fun l2)))
+      )))
+
 
 (define-public (learned-interactive fun)
   "Return learned list of interactive values for @fun"
   (set! fun (procedure-symbol-name fun))
-  (or (ahash-ref interactive-arg-table fun) '()))
+  (case fun
+    ((recent-buffer)
+     (recent-files-paths interactive-arg-recent-file-json))
+    (else
+     (or (ahash-ref interactive-arg-table fun) '()))))
+
+
+
 
 (define-public (forget-interactive fun)
   "Forget interactive values for @fun"
   (set! fun (procedure-symbol-name fun))
   (when (symbol? fun)
-    (ahash-remove! interactive-arg-table fun)))
+    (case fun
+      ((recent-buffer)
+       (set! interactive-arg-recent-file-json
+             (json-set
+               (json-set interactive-arg-recent-file-json 'files #())
+               'meta 'total 0)))
+      (else
+       (ahash-remove! interactive-arg-table fun)))))
+
 
 (define (learned-interactive-arg fun nr)
   (let* ((l (learned-interactive fun))
@@ -310,7 +435,9 @@
 
 (define (save-learned)
   (with l (ahash-table->list interactive-arg-table)
-    (save-object "$TEXMACS_HOME_PATH/system/interactive.scm" l)))
+    (save-object "$TEXMACS_HOME_PATH/system/interactive.scm" l)
+    (path-write-text "$TEXMACS_HOME_PATH/system/recent-files.json"
+                 (json->string interactive-arg-recent-file-json))))
 
 (define (ahash-set-2! t x)
   (with (key . l) x
@@ -342,7 +469,12 @@
       (let* ((l (load-object "$TEXMACS_HOME_PATH/system/interactive.scm"))
              (old? (and (pair? l) (pair? (car l)) (list-2? (caar l))))
              (decode (if old? decode-old list->ahash-table)))
-        (set! interactive-arg-table (decode l)))))
+        (set! interactive-arg-table (decode l))))
+  (if (url-exists? "$TEXMACS_HOME_PATH/system/recent-files.json")
+      (set! interactive-arg-recent-file-json
+            (string->json
+             (path-read-text "$TEXMACS_HOME_PATH/system/recent-files.json")))))
+
 
 (on-entry (retrieve-learned))
 (on-exit (save-learned))

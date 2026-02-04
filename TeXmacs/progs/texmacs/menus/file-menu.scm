@@ -86,7 +86,9 @@
     (let* ((short-name `(verbatim ,(short-menu-name name)))
            (long-name `(verbatim ,(long-menu-name name))))
       ((balloon (eval short-name) (eval long-name))
-       (if win? (load-document name) (load-buffer name))))))
+       (begin 
+          (if win? (load-document name) (load-buffer name))
+          (when (not (url-exists? (url->system name))) (recent-files-remove-by-path (url->system name))))))))
 
 (tm-define (recent-file-list nr)
   (let* ((l1 (map cdar (learned-interactive "recent-buffer")))
