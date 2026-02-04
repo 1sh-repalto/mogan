@@ -799,11 +799,16 @@ qt_simple_widget_rep::scroll_image_popup_by (SI x, SI y) {
 
 void
 qt_simple_widget_rep::ensure_text_toolbar () {
-  if (!textToolbar && canvas ()) {
-    textToolbar= new QTMTextToolbar (canvas (), this);
-    if (is_empty (tm_style_sheet)) {
-      textToolbar->setStyle (qtmstyle ());
+  if (!canvas ()) return;
+  if (textToolbar) {
+    if (textToolbar->parent () != canvas ()) {
+      textToolbar->setParent (canvas ());
     }
+    return;
+  }
+  textToolbar= new QTMTextToolbar (canvas (), this);
+  if (is_empty (tm_style_sheet)) {
+    textToolbar->setStyle (qtmstyle ());
   }
 }
 
@@ -821,9 +826,6 @@ void
 qt_simple_widget_rep::hide_text_toolbar () {
   if (textToolbar) {
     textToolbar->hide ();
-    // textToolbar->setParent (nullptr);
-    textToolbar->deleteLater ();
-    textToolbar= nullptr;
   }
 }
 
