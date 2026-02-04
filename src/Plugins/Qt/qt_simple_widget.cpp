@@ -821,7 +821,7 @@ void
 qt_simple_widget_rep::hide_text_toolbar () {
   if (textToolbar) {
     textToolbar->hide ();
-    //textToolbar->setParent (nullptr);
+    // textToolbar->setParent (nullptr);
     textToolbar->deleteLater ();
     textToolbar= nullptr;
   }
