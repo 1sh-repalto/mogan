@@ -31,6 +31,7 @@
 #include <QToolButton>
 #include <QToolTip>
 #include <QWidgetAction>
+#include <algorithm>
 #include <cmath>
 
 // 悬浮工具栏创建函数
@@ -135,6 +136,10 @@ QTMTextToolbar::showTextToolbar (qt_renderer_rep* ren, rectangle selr,
                                  double magf, int scroll_x, int scroll_y,
                                  int canvas_x, int canvas_y) {
   cachePosition (selr, magf, scroll_x, scroll_y, canvas_x, canvas_y);
+  if (!selectionInView ()) {
+    hide ();
+    return;
+  }
   updatePosition (ren);
   show ();
   raise ();
@@ -142,6 +147,10 @@ QTMTextToolbar::showTextToolbar (qt_renderer_rep* ren, rectangle selr,
 
 void
 QTMTextToolbar::updatePosition (qt_renderer_rep* ren) {
+  if (!selectionInView ()) {
+    hide ();
+    return;
+  }
   int x, y;
   getCachedPosition (ren, x, y);
   move (x, y);
@@ -173,13 +182,17 @@ void
 QTMTextToolbar::getCachedPosition (qt_renderer_rep* ren, int& x, int& y) {
   rectangle selr    = cached_rect;
   double    inv_unit= 1.0 / 256.0;
-  double    cx_logic= (selr->x1 + selr->x2) * 0.5;
-  double top_logic= selr->y2; // 使用选区底部位置，使工具栏显示在选中文字正上方
+  double cx_logic        = (selr->x1 + selr->x2) * 0.5;
+  double sel_top_logic   = (selr->y1 > selr->y2) ? selr->y1 : selr->y2;
+  double sel_bottom_logic= (selr->y1 > selr->y2) ? selr->y2 : selr->y1;
 
   // 使用公式计算QT坐标
   double cx_px=
       ((cx_logic - cached_scroll_x) * cached_magf + cached_canvas_x) * inv_unit;
-  double top_px= -(top_logic - cached_scroll_y) * cached_magf * inv_unit;
+  double top_px=
+      -(sel_top_logic - cached_scroll_y) * cached_magf * inv_unit;
+  double bottom_px=
+      -(sel_bottom_logic - cached_scroll_y) * cached_magf * inv_unit;
 
   // 修正：视口 > 表面：存在空白顶部
   double blank_top= 0.0;
@@ -190,21 +203,73 @@ QTMTextToolbar::getCachedPosition (qt_renderer_rep* ren, int& x, int& y) {
     if (vp_h > surf_h) blank_top= (vp_h - surf_h) * 0.5;
   }
   top_px+= blank_top;
+  bottom_px+= blank_top;
+
+  const int above_y=
+      int (std::round (top_px -
+                       cached_height-10)); // 在选区顶部上方显示
+  const int below_y=
+      int (std::round (bottom_px + 10)); // 如果上面空间不够，显示在选区下方
 
   x= int (std::round (cx_px - cached_width * 0.5));
-  y= int (std::round (top_px -
-                      cached_height)); // 在选区底部上方显示，与图片悬浮窗口一致
+  y= above_y;
 
   // 确保工具栏在视口内
-  if (x < 0) x= 0;
-  if (y < 0)
-    y= int (std::round (top_px + 10)); // 如果上面空间不够，显示在选区下方
   if (owner && owner->scrollarea () && owner->scrollarea ()->viewport ()) {
     int vp_w= owner->scrollarea ()->viewport ()->width ();
     int vp_h= owner->scrollarea ()->viewport ()->height ();
+
+    const bool above_fits=
+        (above_y >= 0) && (above_y + cached_height <= vp_h);
+    if (!above_fits) y= below_y;
+
+    if (x < 0) x= 0;
     if (x + cached_width > vp_w) x= vp_w - cached_width;
+    if (y < 0) y= 0;
     if (y + cached_height > vp_h) y= vp_h - cached_height;
   }
+  else {
+    if (y < 0) y= below_y;
+  }
+}
+
+bool
+QTMTextToolbar::selectionInView () const {
+  if (!owner || !owner->scrollarea () || !owner->scrollarea ()->viewport ())
+    return true;
+
+  rectangle selr    = cached_rect;
+  double    inv_unit= 1.0 / 256.0;
+
+  double x1_px=
+      ((selr->x1 - cached_scroll_x) * cached_magf + cached_canvas_x) * inv_unit;
+  double x2_px=
+      ((selr->x2 - cached_scroll_x) * cached_magf + cached_canvas_x) * inv_unit;
+  double y1_px=
+      -(selr->y1 - cached_scroll_y) * cached_magf * inv_unit;
+  double y2_px=
+      -(selr->y2 - cached_scroll_y) * cached_magf * inv_unit;
+
+  double blank_top= 0.0;
+  if (owner->scrollarea ()->surface ()) {
+    int vp_h  = owner->scrollarea ()->viewport ()->height ();
+    int surf_h= owner->scrollarea ()->surface ()->height ();
+    if (vp_h > surf_h) blank_top= (vp_h - surf_h) * 0.5;
+  }
+  y1_px+= blank_top;
+  y2_px+= blank_top;
+
+  double left  = std::min (x1_px, x2_px);
+  double right = std::max (x1_px, x2_px);
+  double top   = std::min (y1_px, y2_px);
+  double bottom= std::max (y1_px, y2_px);
+
+  int vp_w= owner->scrollarea ()->viewport ()->width ();
+  int vp_h= owner->scrollarea ()->viewport ()->height ();
+
+  if (right < 0.0 || left > vp_w) return false;
+  if (bottom < 0.0 || top > vp_h) return false;
+  return true;
 }
 
 void

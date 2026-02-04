@@ -1107,6 +1107,17 @@ edit_interface_rep::update_text_toolbar () {
     // 注意：rectangle 不是 list 类型，不能使用 is_nil
     // 我们检查矩形坐标是否有效
     if (text_selr->x1 < text_selr->x2 && text_selr->y1 < text_selr->y2) {
+      update_visible ();
+      SI sel_x1= min (text_selr->x1, text_selr->x2);
+      SI sel_x2= max (text_selr->x1, text_selr->x2);
+      SI sel_y1= min (text_selr->y1, text_selr->y2);
+      SI sel_y2= max (text_selr->y1, text_selr->y2);
+      bool sel_in_view=
+          !(sel_x2 < vx1 || sel_x1 > vx2 || sel_y2 < vy1 || sel_y1 > vy2);
+      if (!sel_in_view) {
+        hide_text_toolbar ();
+        return;
+      }
       show_text_toolbar (text_selr, magf, get_scroll_x (), get_scroll_y (),
                          get_canvas_x (), get_canvas_y ());
     }

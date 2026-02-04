@@ -53,6 +53,7 @@ protected:
   void cachePosition (rectangle selr, double magf, int scroll_x, int scroll_y,
                       int canvas_x, int canvas_y);
   void getCachedPosition (qt_renderer_rep* ren, int& x, int& y);
+  bool selectionInView () const;
   void rebuildButtonsFromScheme ();
   void clearButtons ();
   bool eventFilter (QObject* obj, QEvent* event) override;

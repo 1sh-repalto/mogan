@@ -19,6 +19,7 @@
 #include "qt_gui.hpp"
 #include "qt_simple_widget.hpp"
 #include "qt_utilities.hpp"
+#include "edit_interface.hpp"
 #include "scheme.hpp"
 #include "sys_utils.hpp"
 #ifdef USE_MUPDF_RENDERER
@@ -157,6 +158,10 @@ QTMWidget::scrollContentsBy (int dx, int dy) {
   tm_widget ()->scroll_math_completion_popup_by (dx, dy);
   tm_widget ()->scroll_image_popup_by (dx, dy);
   tm_widget ()->scroll_text_toolbar_by (dx, dy);
+  if (edit_interface_rep* ed=
+          dynamic_cast<edit_interface_rep*> (tm_widget ())) {
+    ed->update_text_toolbar ();
+  }
 }
 
 void
