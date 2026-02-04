@@ -47,6 +47,7 @@ qt_simple_widget_rep::~qt_simple_widget_rep () {
   if (backingPixmap != NULL) delete backingPixmap;
 #endif
   if (completionPopUp != nullptr) delete completionPopUp;
+  if (textToolbar != nullptr) delete textToolbar;
 }
 
 QWidget*
@@ -820,9 +821,6 @@ void
 qt_simple_widget_rep::hide_text_toolbar () {
   if (textToolbar) {
     textToolbar->hide ();
-    textToolbar->setParent (nullptr);
-    textToolbar->deleteLater ();
-    textToolbar= nullptr;
   }
 }
 
