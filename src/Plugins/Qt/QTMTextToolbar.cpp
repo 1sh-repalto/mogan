@@ -19,8 +19,8 @@
 #include "server.hpp"
 #include "tm_ostream.hpp"
 
-#include <QGuiApplication>
 #include <QFrame>
+#include <QGuiApplication>
 #include <QHelpEvent>
 #include <QIcon>
 #include <QLayoutItem>
@@ -87,7 +87,7 @@ QTMTextToolbar::rebuildButtonsFromScheme () {
   object obj = call ("make-menu-widget", menu, 0);
   if (!is_widget (obj)) return;
 
-  text_toolbar_widget= concrete (as_widget (obj));
+  text_toolbar_widget  = concrete (as_widget (obj));
   QList<QAction*>* list= text_toolbar_widget->get_qactionlist ();
   if (!list) return;
 
@@ -228,9 +228,9 @@ QTMTextToolbar::autoSize () {
   }
 
   // 设置按钮大小
-  QSize icon_size (btn_size, btn_size);
-  QSize fixed_size (btn_size + 32,
-                    btn_size + 32); // 内边距也扩大4倍 (8 * 4.0 = 32)
+  QSize                     icon_size (btn_size, btn_size);
+  QSize                     fixed_size (btn_size + 32,
+                                        btn_size + 32); // 内边距也扩大4倍 (8 * 4.0 = 32)
   const QList<QToolButton*> buttons=
       findChildren<QToolButton*> (QString (), Qt::FindChildrenRecursively);
   for (QToolButton* button : buttons) {
