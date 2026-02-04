@@ -884,8 +884,7 @@ edit_interface_rep::mouse_any (string type, SI x, SI y, int mods, time_t t,
   if (type == "press-up") mouse_scroll (x, y, true);
   if (type == "press-down") mouse_scroll (x, y, false);
 
-  if ((type == "press-left") || (type == "release-left") ||
-      (type == "end-drag-left") || (type == "press-middle") ||
+  if ((type == "press-left") || (type == "press-middle") ||
       (type == "press-right")) {
     // 当用户点击其他地方（不在文本工具栏内）时，隐藏文本工具栏
     if (!is_point_in_text_toolbar (x, y)) {
@@ -1097,6 +1096,10 @@ edit_interface_rep::is_point_in_text_toolbar (SI x, SI y) {
 
 void
 edit_interface_rep::update_text_toolbar () {
+  if (left_dragging) {
+    hide_text_toolbar ();
+    return;
+  }
   // 检查是否应该显示文本工具栏
   if (should_show_text_toolbar ()) {
     rectangle text_selr= get_text_selection_rect ();
