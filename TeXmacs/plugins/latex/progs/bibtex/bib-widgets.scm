@@ -128,8 +128,8 @@
               bibwid-update-buffer?)
       // //
       (text "Style:") // //
-      (enum (bibwid-set-style answer) (safe-bib-standard-styles)
-            bibwid-style "10em"))
+      (verb (enum (bibwid-set-style answer) (safe-bib-standard-styles)
+            bibwid-style "10em")))
     ===
     (hlist // (dynamic (bibwid-preview)) //)
     ===
