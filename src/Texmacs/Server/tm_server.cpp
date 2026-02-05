@@ -36,6 +36,7 @@
 #include <QApplication>
 #include <QProcess>
 #include <QStringList>
+#include <QtNetwork/qnetworkaccessmanager.h>
 #endif
 
 server* the_server     = NULL;
@@ -309,6 +310,8 @@ tm_server_rep::is_yes (string s) {
 void
 tm_server_rep::quit () {
   debug_automatic << "Stopping the server..." << LF;
+
+  analyticsToSendUseAction ("close");
   close_all_pipes ();
   call ("quit-TeXmacs-scheme");
   clear_pending_commands ();
@@ -351,6 +354,36 @@ tm_server_rep::login () {
 bool
 tm_server_rep::is_logged_in () {
   return m_account->isLoggedIn ();
+}
+
+/******************************************************************************
+ * User action analytics
+ ******************************************************************************/
+
+/*!
+ * \brief Send user action analytics data
+ *
+ * Sends user behavior statistics to the server via HTTP HEAD request
+ * for product analytics. Supports recording user actions like
+ * "open" and "close" events.
+ *
+ * \param action User action type, e.g., "open", "close"
+ *
+ * \note This method works without a window, suitable for startup scenarios
+ */
+void
+tm_server_rep::analyticsToSendUseAction (string action) {
+  string product = is_community_stem () ? "mogan" : "liiistem";
+
+  eval ("(use-modules (liii account))");
+  string url_base = as_string (call ("account-oauth2-config", "user-action-url"));
+  string full_url = url_base * "?action=" * action * "&product=" * product;
+
+  QNetworkAccessManager* manager = new QNetworkAccessManager ();
+  QUrl url (to_qstring (full_url));
+  QNetworkRequest request (url);
+  manager->head (request); // asynchronous
+  debug_automatic << "Sent user action analytics: " << action << "\n";
 }
 
 /******************************************************************************

@@ -944,6 +944,10 @@ TeXmacs_main (int argc, char** argv) {
     bench_reset ("initialize scheme");
 
     if (DEBUG_STD) debug_boot << "Starting event loop...\n";
+
+    // Send open action analytics
+    get_server()->analyticsToSendUseAction ("open");
+
     texmacs_started= true;
     if (!disable_error_recovery) {
       // 注册信号处理器，确保子进程被正确清理

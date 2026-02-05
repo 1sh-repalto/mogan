@@ -88,6 +88,7 @@
       ((== key "user-info-url") (string-append base-url "/api/v1/oauth2/membershipInfo"))
       ((== key "pricing-url") (string-append base-url "/pricing.html"))
       ((== key "click-return-liii-url") "https://liiistem.cn/?from=login_button")
+      ((== key "user-action-url") (string-append base-url "/api/v1/analytics/userAction"))
       (else ""))))
 
 ;; 本地
