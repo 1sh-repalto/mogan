@@ -15,8 +15,7 @@
   (:use (kernel texmacs tm-define)))
 (import (liii json)
         (liii time)
-        (liii list)
-        (liii path))
+        (liii list))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Questions with user interaction
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -436,8 +435,9 @@
 (define (save-learned)
   (with l (ahash-table->list interactive-arg-table)
     (save-object "$TEXMACS_HOME_PATH/system/interactive.scm" l)
-    (path-write-text "$TEXMACS_HOME_PATH/system/recent-files.json"
-                 (json->string interactive-arg-recent-file-json))))
+    (string-save
+      (json->string interactive-arg-recent-file-json)
+      (string->url "$TEXMACS_HOME_PATH/system/recent-files.json"))))
 
 (define (ahash-set-2! t x)
   (with (key . l) x
@@ -473,7 +473,8 @@
   (if (url-exists? "$TEXMACS_HOME_PATH/system/recent-files.json")
       (set! interactive-arg-recent-file-json
             (string->json
-             (path-read-text "$TEXMACS_HOME_PATH/system/recent-files.json")))))
+             (string-load
+               (string->url "$TEXMACS_HOME_PATH/system/recent-files.json"))))))
 
 
 (on-entry (retrieve-learned))
