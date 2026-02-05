@@ -828,10 +828,6 @@ pretty-val : string
       (meti (hlist // (text "New style page breaking"))
         (toggle (set-boolean-preference "new style page breaking" answer)
                 (get-boolean-preference "new style page breaking")))
-      (meti (hlist // (text "New bibliography dialogue"))
-        (toggle
-         (set-boolean-preference "gui:new bibliography dialogue" answer)
-         (get-boolean-preference "gui:new bibliography dialogue")))
       (meti (hlist // (text "Encryption"))
         (toggle (set-boolean-preference "experimental encryption" answer)
                 (get-boolean-preference "experimental encryption")))
@@ -879,10 +875,6 @@ pretty-val : string
     (meti (hlist // (text "New style page breaking"))
       (toggle (set-boolean-preference "new style page breaking" answer)
               (get-boolean-preference "new style page breaking")))
-    ;;(meti (hlist // (text "New bibliography dialogue"))
-    ;;  (toggle
-    ;;   (set-boolean-preference "gui:new bibliography dialogue" answer)
-    ;;   (get-boolean-preference "gui:new bibliography dialogue")))
     (meti (hlist // (text "Program bracket matching"))
       (toggle (set-boolean-preference "prog:highlight brackets" answer)
               (get-boolean-preference "prog:highlight brackets")))

@@ -42,10 +42,6 @@
       (meti (hlist // (text "Use native menubar"))
         (toggle (set-boolean-preference "use native menubar" answer)
                 (get-boolean-preference "use native menubar"))))
-    (meti (hlist // (text "New bibliography dialogue"))
-      (toggle
-       (set-boolean-preference "gui:new bibliography dialogue" answer)
-       (get-boolean-preference "gui:new bibliography dialogue")))
     (meti (hlist // (text "Program bracket matching"))
       (toggle (set-boolean-preference "prog:highlight brackets" answer)
               (get-boolean-preference "prog:highlight brackets")))
