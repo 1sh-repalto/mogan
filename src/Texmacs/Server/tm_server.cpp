@@ -373,15 +373,16 @@ tm_server_rep::is_logged_in () {
  */
 void
 tm_server_rep::analyticsToSendUseAction (string action) {
-  string product = is_community_stem () ? "mogan" : "liiistem";
+  string product= is_community_stem () ? "mogan" : "liiistem";
 
   eval ("(use-modules (liii account))");
-  string url_base = as_string (call ("account-oauth2-config", "user-action-url"));
-  string full_url = url_base * "?action=" * action * "&product=" * product;
+  string url_base=
+      as_string (call ("account-oauth2-config", "user-action-url"));
+  string full_url= url_base * "?action=" * action * "&product=" * product;
 
-  QNetworkAccessManager* manager = new QNetworkAccessManager ();
-  QUrl url (to_qstring (full_url));
-  QNetworkRequest request (url);
+  QNetworkAccessManager* manager= new QNetworkAccessManager ();
+  QUrl                   url (to_qstring (full_url));
+  QNetworkRequest        request (url);
   manager->head (request); // asynchronous
   debug_automatic << "Sent user action analytics: " << action << "\n";
 }

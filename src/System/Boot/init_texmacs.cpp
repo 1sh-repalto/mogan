@@ -946,7 +946,7 @@ TeXmacs_main (int argc, char** argv) {
     if (DEBUG_STD) debug_boot << "Starting event loop...\n";
 
     // Send open action analytics
-    get_server()->analyticsToSendUseAction ("open");
+    get_server ()->analyticsToSendUseAction ("open");
 
     texmacs_started= true;
     if (!disable_error_recovery) {
