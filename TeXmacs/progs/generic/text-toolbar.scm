@@ -26,7 +26,7 @@
    (mark-text))
   (=> (balloon (icon "tm_color.xpm") "Select a foreground color")
       (link color-menu))
-  (=> (balloon (icon "tm_chapter.xpm") "chapter::menu")
+  (=> (balloon (icon "tm_section.xpm") "chapter::menu")
       (link chapter-menu))
   (=> (balloon (icon "tm_theorem.xpm") "enunciation")
       (link enunciation-menu))          
