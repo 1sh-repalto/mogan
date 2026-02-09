@@ -146,7 +146,7 @@
   (set! bibwid-buffer (current-buffer))
   (let ((u (current-bib-file #f))
         (s (current-bib-style #f))
-        (name (url-tail bibwid-buffer)))
+        (name (buffer-get-title bibwid-buffer)))
     (if (and (not (url-none? u)) (!= s ""))
         (with msg (replace "Modifying bibliography for %1" name)
           (bibwid-set-url u)
