@@ -906,13 +906,8 @@ edit_interface_rep::mouse_any (string type, SI x, SI y, int mods, time_t t,
     if (handle_cursor != "") set_cursor_style (handle_cursor);
     else set_cursor_style ("size_all");
   }
-  else if (hovering_table) {
-    if (hovering_table == -1) {
-      set_cursor_style ("normal");
-      // draw table resizing handles
-    }
-    else set_cursor_style (hovering_table == 1 ? "size_ver" : "size_hor");
-  }
+  else if (hovering_table)
+    set_cursor_style (hovering_table == 1 ? "size_ver" : "size_hor");
   else if (hovering_hlink) set_cursor_style ("pointing_hand");
   else if (hovering_image) {
     set_cursor_style ("pointing_hand");
