@@ -1245,6 +1245,7 @@
   ("@ R" "<circledR>")
   ("@ S" "<circledS>")
   ("@ / var" "<oslash>")
+  ("@ / var var" "<emptyset>")
   ("@ \\" "<obslash>")
   ("@ <" "<olessthan>")
   ("@ < var" "<circlearrowleft>")
@@ -2535,6 +2536,7 @@
 
 (kbd-map
   (:mode in-math-not-hybrid?)
+  ("0 /" "<emptyset>")
   ("0 0 var" "<Bbb-0>")
   ("0 0 var var" "<b-0>")
   ("1 1 var" "<Bbb-1>")
