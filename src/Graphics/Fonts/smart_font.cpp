@@ -1134,16 +1134,28 @@ smart_font_rep::resolve (string c) {
   }
   array<string> a= trimmed_tokenize (family, ",");
 
-  // Special handling for emoji characters - bypass font-family restrictions
+  // Special handling for emoji characters:
+  // Prefer text-capable fonts first, fallback to explicit emoji font.
   string range= get_unicode_range (c);
   if (range == "emoji") {
+    if (fn[SUBFONT_MAIN]->supports (c)) {
+      return sm->add_char (tuple ("main"), c);
+    }
+
+    font cfn= closest_font ("Noto CJK SC", variant, series, rshape, sz, dpi, 1);
+    if (!is_nil (cfn) && cfn->supports (c)) {
+      tree key= tuple ("subfont", "Noto CJK SC");
+      int  nr = sm->add_font (key, REWRITE_NONE);
+      initialize_font (nr);
+      return sm->add_char (key, c);
+    }
+
+    // Fallback to explicit emoji family entries.
     for (int i= 0; i < N (a); i++) {
       array<string> parts= trimmed_tokenize (a[i], "=");
       if (N (parts) >= 2 && parts[0] == "emoji") {
-
-        // Use direct font creation to avoid recursion
-        font cfn= closest_font (parts[1], "rm", "medium", "right", sz, dpi, 1);
-        if (!is_nil (cfn) && cfn->supports (c)) {
+        font efn= closest_font (parts[1], "rm", "medium", "right", sz, dpi, 1);
+        if (!is_nil (efn) && efn->supports (c)) {
           tree key= tuple ("emoji-font", parts[1]);
           int  nr = sm->add_font (key, REWRITE_NONE);
           initialize_font (nr);
