@@ -57,20 +57,25 @@ Mogan STEM is a professional scientific writing platform targeted at mathematics
 
 ### Installation
 
-#### Mogan STEM (Community Version)
+#### Option 1: Mogan STEM (Community Version)
 From Release: Download the latest release for your platform from [GitHub releases](https://github.com/XmacsLabs/mogan/releases).
 
-Build from Source:
+#### Option 2: Build from Source
+
+Clone the repository:
+
 ```bash
-# Clone the repository
 git clone https://github.com/XmacsLabs/mogan.git
 cd mogan
-
-# Build with xmake
-xmake build stem
 ```
 
-#### Liii STEM (Commercial Version)
+For detailed setup, dependency installation, build, and run instructions, please follow the guide for your platform:
+
+- [GNU/Linux Development Guide](devel/Develop_on_Linux.md)
+- [Windows Development Guide](devel/Develop_on_Windows.md)
+- [macOS Development Guide](devel/Develop_on_macOS.md)
+
+#### Option 3: Liii STEM (Commercial Version)
 For the commercial version with built-in AI features, please visit the [Liii STEM official website](https://liiistem.cn) for installation options.
 
 ## Documentation & Learning
