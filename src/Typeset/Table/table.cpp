@@ -2,7 +2,8 @@
 /******************************************************************************
  * MODULE     : table.cpp
  * DESCRIPTION: Tables and cells of tables
- * COPYRIGHT  : (C) 1999  Joris van der Hoeven 2026 Yuki Lu
+ * COPYRIGHT  : (C) 1999  Joris van der Hoeven
+ *                  2026 Yuki Lu
  *******************************************************************************
  * This software falls under the GNU general public license version 3 or later.
  * It comes WITHOUT ANY WARRANTY WHATSOEVER. For details, see the file LICENSE
