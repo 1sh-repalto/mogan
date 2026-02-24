@@ -2,7 +2,7 @@
 /******************************************************************************
  * MODULE     : table.cpp
  * DESCRIPTION: Tables and cells of tables
- * COPYRIGHT  : (C) 1999  Joris van der Hoeven
+ * COPYRIGHT  : (C) 1999  Joris van der Hoeven 2026 Yuki Lu
  *******************************************************************************
  * This software falls under the GNU general public license version 3 or later.
  * It comes WITHOUT ANY WARRANTY WHATSOEVER. For details, see the file LICENSE
@@ -348,6 +348,18 @@ table_rep::handle_decorations () {
   for (j= 0, jj= 0; j < nr_cols; jj+= ex_j1[j] + ex_j2[j] + 1, j++)
     off_j[j]= jj;
 
+  // Precompute row and column bases for faster access
+  array<int> row_base (nr_rows), row_end (nr_rows);
+  array<int> col_base (nr_cols), col_end (nr_cols);
+  for (i= 0; i < nr_rows; i++) {
+    row_base[i]= off_i[i] + ex_i1[i];
+    row_end[i] = row_base[i] + 1;
+  }
+  for (j= 0; j < nr_cols; j++) {
+    col_base[j]= off_j[j] + ex_j1[j];
+    col_end[j] = col_base[j] + 1;
+  }
+
   /*** compute decorated table ***/
   cell** U;
   int    new_rows= nr_rows, new_cols= nr_cols;
@@ -359,28 +371,45 @@ table_rep::handle_decorations () {
   for (i= 0; i < new_rows; i++)
     U[i]= tm_new_array<cell> (new_cols);
 
-  for (i= 0; i < nr_rows; i++)
+  // Step 1: Copy all decorations first
+  for (i= 0; i < nr_rows; i++) {
+    for (j= 0; j < nr_cols; j++) {
+      cell C= T[i][j];
+      if (is_nil (C)) continue;
+      if (is_nil (C->D)) continue;
+      if (C->D->status != 1) continue;
+
+      table dec   = C->D;
+      int   base_i= row_base[i] - dec->i0;
+      int   base_j= col_base[j] - dec->j0;
+      for (di= 0; di < dec->nr_rows; di++) {
+        int   target_i= base_i + di;
+        cell* src_row = dec->T[di];
+        cell* dst_row = U[target_i];
+        for (dj= 0; dj < dec->nr_cols; dj++) {
+          int target_j     = base_j + dj;
+          dst_row[target_j]= src_row[dj];
+        }
+      }
+      C->D= table ();
+    }
+  }
+
+  // Step 2: Place all original cells and update spans
+  for (i= 0; i < nr_rows; i++) {
     for (j= 0; j < nr_cols; j++) {
       cell C= T[i][j];
       if (!is_nil (C)) {
-        if ((!is_nil (C->D)) && (C->D->status == 1)) {
-          for (di= 0; di < C->D->nr_rows; di++)
-            for (dj= 0; dj < C->D->nr_cols; dj++) {
-              ii       = di + off_i[i] + ex_i1[i] - C->D->i0;
-              jj       = dj + off_j[j] + ex_j1[j] - C->D->j0;
-              U[ii][jj]= C->D->T[di][dj];
-            }
-          C->D= table ();
-        }
-        ii         = off_i[i] + ex_i1[i];
-        jj         = off_j[j] + ex_j1[j];
-        U[ii][jj]  = C;
-        ii         = i + C->row_span - 1;
-        jj         = j + C->col_span - 1;
-        C->row_span= off_i[ii] + ex_i1[ii] + 1 - off_i[i] - ex_i1[i];
-        C->col_span= off_j[jj] + ex_j1[jj] + 1 - off_j[j] - ex_j1[j];
+        int target_i         = row_base[i];
+        int target_j         = col_base[j];
+        U[target_i][target_j]= C;
+        int end_i            = i + C->row_span - 1;
+        int end_j            = j + C->col_span - 1;
+        C->row_span          = row_end[end_i] - row_base[i];
+        C->col_span          = col_end[end_j] - col_base[j];
       }
     }
+  }
 
   /*** replace old table by new one ***/
   for (i= 0; i < nr_rows; i++)
@@ -389,8 +418,8 @@ table_rep::handle_decorations () {
   T      = U;
   nr_rows= new_rows;
   nr_cols= new_cols;
-  i0     = off_i[i0] + ex_i1[i0];
-  j0     = off_j[j0] + ex_j1[j0];
+  i0     = row_base[i0];
+  j0     = col_base[j0];
 }
 
 void
