@@ -164,7 +164,7 @@ tt_font_metric_rep::get (int i) {
     SI  ll          = tt_si (slot->metrics.horiAdvance);
     (void) xw;
 
-    bool is_emoji= is_emoji_character (i);
+    bool is_emoji= !is_nil (face->cbdt_table) && is_emoji_character (i);
     if (is_emoji) {
 
       // For PNG fonts (CBDT), apply scaling factor to make them scalable
@@ -332,7 +332,7 @@ tt_font_glyphs_rep::get (int i) {
     }
 
     // Handle emoji characters
-    bool is_emoji= is_emoji_character (i);
+    bool is_emoji= !is_nil (face->cbdt_table) && is_emoji_character (i);
     if (is_emoji) {
       SI ll= tt_si (slot->metrics.horiAdvance);
 
