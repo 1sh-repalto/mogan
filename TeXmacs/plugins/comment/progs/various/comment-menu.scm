@@ -68,7 +68,8 @@
         (dynamic (comment-color-menu type by val)))))
 
 (tm-menu (focus-hidden-icons t)
-  (:require (any-comment-context? t)))
+  (:require (any-comment-context? t))
+  (dynamic (string-input-icon t 3)))
 
 (tm-menu (focus-extra-icons t)
   (:require (any-comment-context? t))
