@@ -1,8 +1,10 @@
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; MODULE      : bib-widgets.scm
 ;; DESCRIPTION : Widgets for bibliography
 ;; COPYRIGHT   : (C) 2014 Miguel de Benito Delgado
+;;                   2026 Yuki Lu
 ;;
 ;; This software falls under the GNU general public license version 3 or later.
 ;; It comes WITHOUT ANY WARRANTY WHATSOEVER. For details, see the file LICENSE
@@ -15,10 +17,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (texmacs-module (bibtex bib-widgets)
-  (:use (bibtex bib-complete) (generic document-edit)))
+  (:use (bibtex bib-complete) (bibtex bib-utils) (generic document-edit)))
 
 (define bibwid-url (string->url ""))
 (define bibwid-style "tm-plain")
+(define bibwid-default-style "tm-plain")
 (define bibwid-use-relative? #t)
 (define bibwid-update-buffer? #t)
 (define bibwid-buffer (string->url ""))
@@ -30,28 +33,47 @@
          (set! bibwid-url (url-append (url-head bibwid-buffer) u)))
         (else (set! bibwid-url u))))
 
+(define (safe-bib-standard-styles)
+  (catch #t (lambda () (bib-standard-styles))
+         (lambda (key . args) '("tm-plain"))))
+
 (define (bibwid-set-style answer)
-  (set! bibwid-style answer)
+  (let ((styles (safe-bib-standard-styles)))
+    (if (and (string? answer) (in? answer styles))
+        (set! bibwid-style answer)
+        (set! bibwid-style bibwid-default-style)))
   (refresh-now "bibwid-preview"))
+
+(define (bibwid-preview-bg-color)
+  (if (== (get-preference "gui theme") "liii-night") "#202020" "#ffffff"))
+
+(define (bibwid-preview-fg-color)
+  (if (== (get-preference "gui theme") "liii-night") "#ffffff" "#000000"))
 
 (define (bibwid-output-content t style)
   (if (tree-is? t 'string) 
-      '(with "bg-color" "white"
-         (mini-paragraph "480guipx"
-           (document (concat "Please choose a valid " (BibTeX) " file"))))
-      `(with "bg-color" "#ffffff"
-         (mini-paragraph "480px" ,(bib-process "bib" style (tree->stree t))))))
+      `(with "bg-color" ,(bibwid-preview-bg-color)
+         "color" ,(bibwid-preview-fg-color)
+         (mini-paragraph "1250px"
+           (document ,(replace "Please choose a valid %1 file" "BibTeX"))))
+      `(with "bg-color" ,(bibwid-preview-bg-color)
+         "color" ,(bibwid-preview-fg-color)
+         (mini-paragraph "1250px" ,(bib-process "bib" style (tree->stree t))))))
 
 (define (bibwid-output)
-  (with style (if (== "tm-" (string-take bibwid-style 3))
+  (with style (if (and (>= (string-length bibwid-style) 3)
+                       (== "tm-" (string-take bibwid-style 3)))
                   (string-drop bibwid-style 3)
                   bibwid-style)
-    (eval `(use-modules (bibtex ,(string->symbol style))))
+    (when (== style "")
+      (set! style bibwid-default-style))
+    (catch #t (lambda () (eval `(use-modules (bibtex ,(string->symbol style)))))
+           (lambda (key . args) (noop)))
     (with u (if (and bibwid-use-relative? (not (url-rooted? bibwid-url)))
                 (url-append (url-head bibwid-buffer) bibwid-url)
                 bibwid-url)
-      (with t (if (url-exists? u) 
-                  (parse-bib (string-load u)) 
+      (with t (if (url-exists? u)
+                  (parse-bib (string-load u))
                   (tree ""))
         (stree->tree (bibwid-output-content t style))))))
 
@@ -82,8 +104,8 @@
   (bibwid-set-filename bibwid-url))
 
 (tm-widget (bibwid-preview)
-  (resize ("520px" "520px" "9999px") ("100px" "100px" "9999px")
-    (scrollable 
+  (resize '("520px" "520px" "9999px") '("100px" "100px" "9999px")
+    (scrollable
       (refreshable "bibwid-preview"
         (texmacs-output
          (bibwid-output)
@@ -106,18 +128,18 @@
             ("" (choose-file bibwid-set-filename "Choose" "tmbib"))))))
     ===
     (hlist
-      ;(balloon "Use relative path:" "Select this to use a path relative to the current document. You can use this to be able to move around the folder containing your document and the bibliography.")
       (text "Use relative path:") //
-      (toggle (bibwid-set-relative answer) bibwid-use-relative?)
+      (toggle (bibwid-set-relative answer)
+              bibwid-use-relative?)
       // //
-      (text "Update buffer:") // 
+      (text "Update buffer:") //
       (toggle (set! bibwid-update-buffer? answer)
               bibwid-update-buffer?)
-      ///
+      // //
       (text "Style:") // //
-      (enum (bibwid-set-style answer) (bib-standard-styles)
-            bibwid-style "10em"))
-    === === ===
+      (verb (enum (bibwid-set-style answer) (safe-bib-standard-styles)
+            bibwid-style "10em")))
+    ===
     (hlist // (dynamic (bibwid-preview)) //)
     ===
     (bottom-buttons >>>
@@ -133,7 +155,7 @@
   (set! bibwid-buffer (current-buffer))
   (let ((u (current-bib-file #f))
         (s (current-bib-style #f))
-        (name (url-tail bibwid-buffer)))
+        (name (buffer-get-title bibwid-buffer)))
     (if (and (not (url-none? u)) (!= s ""))
         (with msg (replace "Modifying bibliography for %1" name)
           (bibwid-set-url u)
