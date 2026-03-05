@@ -833,7 +833,7 @@ list | boolean
                           (let ((lb (cadr body))
                                 (rb (caddr body)))
                             `(symbol-completion
-                              ,(string-append lb rb)))))
+                              ,lb))))
                     ;; 预留位置：可以在此添加其他函数的处理逻辑
                     
                     (else #f)))))))))))
