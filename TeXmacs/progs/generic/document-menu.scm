@@ -272,7 +272,7 @@
   (:interactive #t)
   (interactive (lambda (s)
     (let* ((num (string->number s))
-           (normalized (if num (/ (floor (+ (* num 2) 0.5)) 2) 10))
+           (normalized (if (and num (> num 0)) (/ (floor (+ (* num 2) 0.5)) 2) 10))
            (val (if (= normalized (floor normalized))
                     (number->string (inexact->exact (floor normalized)))
                     (number->string normalized))))
@@ -281,7 +281,7 @@
 
 (define (font-base-size-menu-name)
   (let* ((raw (string->number (get-init "font-base-size")))
-         (normalized (if raw (/ (floor (+ (* raw 2) 0.5)) 2) 10))
+         (normalized (if (and raw (> raw 0)) (/ (floor (+ (* raw 2) 0.5)) 2) 10))
          (sz-str (if (= normalized (floor normalized))
                      (number->string (inexact->exact (floor normalized)))
                      (number->string normalized))))
