@@ -825,6 +825,24 @@
             ((== p '()) p)
             (else (list (make-menu-bad-format p style))))))
 
+(define (make-symbol-completion-widget sym col)
+  ;; Renders a math symbol using the full TeXmacs typesetting engine
+  (let* ((math-content `(math ,sym))
+         (doc `(document 
+                 (with "color" ,col 
+                       "font-size" "5"   
+                       "page-type" "user"
+                       "page-odd" "3px"     
+                       "page-even" "3px"  
+                       "page-top" "3px"          
+                       "page-bot" "3px"            
+                       ,math-content)))
+         (style `(style (tuple "generic")))
+         (output-wid (widget-texmacs-output doc style)))
+    (widget-menu-button output-wid
+                        (make-menu-command (insert sym))
+                        "" "" 0)))
+
 (define-table make-menu-items-table
   (glue (:boolean? :boolean? :integer? :integer?)
         ,(lambda (p style bar?)
@@ -846,12 +864,12 @@
                (list (make-menu-symbol p style '() (color symbol-color))))))
   (symbol-completion (:string? :*)
           ,(lambda (p style bar?)
-             (let ((symbol-color (if (== (get-preference "gui theme") "liii-night") "white" "black")))
-               (list (make-menu-symbol p style '(roman mr medium normal 10 600 0) (color symbol-color))))))
+              (let ((symbol-color (if (== (get-preference "gui theme") "liii-night") "white" "black")))
+                (list (make-symbol-completion-widget (cadr p) symbol-color)))))
   (symbol-completion* (:string? :*)
           ,(lambda (p style bar?)
-             (let ((symbol-color (if (== (get-preference "gui theme") "liii-night") "#ff6666" "red")))
-               (list (make-menu-symbol p style '(roman mr medium normal 10 600 -2) (color symbol-color))))))
+              (let ((symbol-color (if (== (get-preference "gui theme") "liii-night") "#ff6666" "red")))
+                (list (make-symbol-completion-widget (cadr p) symbol-color)))))
   (texmacs-output (:%2)
     ,(lambda (p style bar?) (list (make-texmacs-output p style))))
   (texmacs-input (:%3)

@@ -296,16 +296,16 @@ texmacs_output_widget (tree doc, tree style) {
   // SI dw2= env->get_length (PAGE_SCREEN_RIGHT);
   // SI dh1= env->get_length (PAGE_SCREEN_BOT);
   // SI dh2= env->get_length (PAGE_SCREEN_TOP);
-  color col= env->get_color (BG_COLOR);
-  if (env->get_string (BG_COLOR) == "white" &&
-      is_transparent (extract (doc, "body")))
+  color col  = env->get_color (BG_COLOR);
+  bool  trans= is_transparent (extract (doc, "body"));
+  if (env->get_string (BG_COLOR) == "white" && trans)
 #ifdef QTTEXMACS
     col= rgb_color (236, 236, 236);
 #else
     col= light_grey;
 #endif
   double zoom= (retina_zoom == 2 ? 1.0 : 1.2);
-  return widget (tm_new<box_widget_rep> (b, col, false, zoom, 0, 0));
+  return widget (tm_new<box_widget_rep> (b, col, trans, zoom, 0, 0));
 }
 
 array<SI>
