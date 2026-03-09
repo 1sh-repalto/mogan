@@ -18,7 +18,6 @@
 #include "merge_sort.hpp"
 #include "observers.hpp"
 #include "preferences.hpp"
-#include "tm_buffer.hpp"
 #include "tree_observer.hpp"
 
 #include <moebius/data/scheme.hpp>
@@ -31,15 +30,6 @@ void
 edit_interface_rep::source_complete_try () {
   bool is_source     = (get_env_string ("mode") == "src");
   bool is_source_mode= (get_env_string ("preamble") == "true");
-
-  // Disable autocomplete in the macro editor
-  string buf_name= as_string (buf->buf->name);
-  if ((starts (buf_name, "tmfs://aux/edit-") &&
-       buf_name != "tmfs://aux/edit-comment" &&
-       buf_name != "tmfs://aux/edit-shortcuts") ||
-      buf_name == "tmfs://aux/macro-editor") {
-    return;
-  }
 
   if (is_source && (!is_source_mode)) {
     completion_style= get_preference ("completion style");

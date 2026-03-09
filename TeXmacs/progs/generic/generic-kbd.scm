@@ -42,7 +42,7 @@
   ("]" (make-bracket-close "]" "["))
   ("{" (make-bracket-open "{" "}"))
   ("}" (make-bracket-close "}" "{"))
-  ("\\" (if (or (inside? 'hybrid) (in-prog?)) (insert "\\") (make-hybrid)))
+  ("\\" (if (or (inside? 'hybrid) (in-prog?) (has-style-package? "macro-editor")) (insert "\\") (make-hybrid)))
   ("\\ var" "\\")
   ("\\ var var" "<setminus>")
   ("$" (make 'math))
