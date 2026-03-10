@@ -25,6 +25,12 @@
         (texmacs texmacs tm-print)
         (doc help-funcs)))
 
+(tm-define (inside-macro-editor?)
+  (with u (url->string (current-buffer))
+  (or (== u "tmfs://aux/macro-editor")
+    (and (string-starts? u "tmfs://aux/edit-")
+      (not (== u "tmfs://aux/edit-shortcuts"))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; General shortcuts for all modes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -42,7 +48,7 @@
   ("]" (make-bracket-close "]" "["))
   ("{" (make-bracket-open "{" "}"))
   ("}" (make-bracket-close "}" "{"))
-  ("\\" (if (or (inside? 'hybrid) (in-prog?) (has-style-package? "macro-editor")) (insert "\\") (make-hybrid)))
+  ("\\" (if (or (inside? 'hybrid) (in-prog?) (inside-macro-editor?)) (insert "\\") (make-hybrid)))
   ("\\ var" "\\")
   ("\\ var var" "<setminus>")
   ("$" (make 'math))
