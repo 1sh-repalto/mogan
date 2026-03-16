@@ -144,6 +144,7 @@
 ("add" "新增")
 ("address block" "地址栏")
 ("address" "地址")
+("affiliation" "单位")
 ("adjust" "调整")
 ("advanced font selector" "高级字体选择器")
 ("advanced layout features" "高级布局特性")
