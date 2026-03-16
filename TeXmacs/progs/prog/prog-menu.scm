@@ -119,6 +119,7 @@
       ("Scala" (make* 'scala "scala"))
       ("Python" (make* 'python "python"))
       ("R" (make* 'r "r"))
+      ("JSON" (make* 'json "json"))
       ("SQL" (make* 'sql "sql"))
       ("Bash" (make* 'bash "bash")))
   (-> "Block of code"
@@ -130,6 +131,7 @@
       ("Scala" (make* 'scala-code "scala"))
       ("Python" (make* 'python-code "python"))
       ("R" (make* 'r-code "r"))
+      ("JSON" (make* 'json-code "json"))
       ("SQL" (make* 'sql-code "sql"))
       ("Bash" (make* 'bash-code "bash")))
   (-> "Listing"
